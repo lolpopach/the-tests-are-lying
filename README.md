@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/lolpopa360/nomoretime?style=flat" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/lolpopa360/the-tests-are-lying?style=flat" alt="License"></a>
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat" alt="Zero dependencies">
   <img src="https://img.shields.io/badge/node-%E2%89%A518-blue?style=flat" alt="Node 18+">
 </p>
@@ -14,13 +14,13 @@ Paste into your assistant:
 
 ```text
 Install the the-tests-are-lying skill from
-https://github.com/lolpopa360/nomoretime, following the repo's AGENTS.md.
+https://github.com/lolpopa360/the-tests-are-lying, following the repo's AGENTS.md.
 ```
 
 Or, in Claude Code:
 
 ```bash
-claude plugin marketplace add lolpopa360/nomoretime
+claude plugin marketplace add lolpopa360/the-tests-are-lying
 claude plugin install the-tests-are-lying@the-tests-are-lying
 ```
 
@@ -293,7 +293,7 @@ Code, Cursor, claude.ai and the Skills API unchanged. A test enforces it.
 ## Contributing
 
 ```bash
-git clone https://github.com/lolpopa360/nomoretime
+git clone https://github.com/lolpopa360/the-tests-are-lying
 cd the-tests-are-lying
 node --test
 ```
