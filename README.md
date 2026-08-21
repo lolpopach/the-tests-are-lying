@@ -260,7 +260,7 @@ offending lines in the diff, and fails the job:
 - uses: actions/checkout@v4
   with:
     fetch-depth: 0        # the range needs a merge base
-- uses: lolpopach/the-tests-are-lying@v1
+- uses: lolpopach/the-tests-are-lying@main
   with:
     fail-on: muted        # lying | muted (default) | looser | never
 ```
