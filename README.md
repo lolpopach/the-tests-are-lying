@@ -251,13 +251,26 @@ npx the-tests-are-lying --range main..HEAD
 | `--list` | Every check and what it finds |
 | `-C <dir>` | Run somewhere else |
 
-In CI, on the PR diff. `fetch-depth: 0` matters -- the default shallow clone
-has no merge base for the range to resolve against:
+## In CI
+
+There is an action. On a pull request it comments the findings, annotates the
+offending lines in the diff, and fails the job:
 
 ```yaml
 - uses: actions/checkout@v4
   with:
-    fetch-depth: 0
+    fetch-depth: 0        # the range needs a merge base
+- uses: lolpopach/the-tests-are-lying@v1
+  with:
+    fail-on: muted        # lying | muted (default) | looser | never
+```
+
+The comment step needs `permissions: pull-requests: write`. Set
+`comment: false` to skip it and only fail the build.
+
+Or without the action:
+
+```yaml
 - run: npx the-tests-are-lying --range origin/main...HEAD
 ```
 

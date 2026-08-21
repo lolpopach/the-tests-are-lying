@@ -1,0 +1,107 @@
+name: 'the-tests-are-lying'
+description: 'Fail the build when a pull request makes the checks easier to pass instead of making the code correct.'
+author: 'lolpopach'
+
+branding:
+  icon: 'alert-triangle'
+  color: 'red'
+
+inputs:
+  range:
+    description: >-
+      Git range to inspect. Defaults to the pull request diff, or the pushed
+      commits. Requires actions/checkout with fetch-depth: 0.
+    required: false
+    default: ''
+  fail-on:
+    description: 'Fail the job at this level or worse: lying, muted, looser, never.'
+    required: false
+    default: 'muted'
+  comment:
+    description: 'Post the findings as a pull request comment. Requires pull-requests: write.'
+    required: false
+    default: 'true'
+  version:
+    description: 'Version of the-tests-are-lying to run.'
+    required: false
+    default: 'latest'
+
+outputs:
+  findings:
+    description: 'Number of findings.'
+    value: ${{ steps.scan.outputs.findings }}
+  lying:
+    description: 'Findings where the check now passes without testing anything.'
+    value: ${{ steps.scan.outputs.lying }}
+  reply:
+    description: 'The message addressed to whoever wrote the diff.'
+    value: ${{ steps.scan.outputs.reply }}
+
+runs:
+  using: composite
+  steps:
+    - name: Work out what to compare
+      id: range
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ -n '${{ inputs.range }}' ]; then
+          echo 'value=${{ inputs.range }}' >> "$GITHUB_OUTPUT"
+        elif [ -n '${{ github.base_ref }}' ]; then
+          git fetch --no-tags origin '${{ github.base_ref }}' >/dev/null 2>&1 || true
+          echo 'value=origin/${{ github.base_ref }}...HEAD' >> "$GITHUB_OUTPUT"
+        else
+          before='${{ github.event.before }}'
+          case "$before" in
+            ''|0000000000000000000000000000000000000000)
+              echo 'value=HEAD~1..HEAD' >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "value=$before..HEAD" >> "$GITHUB_OUTPUT" ;;
+          esac
+        fi
+
+    - name: Look for weakened checks
+      id: scan
+      shell: bash
+      env:
+        RANGE: ${{ steps.range.outputs.value }}
+        VERSION: ${{ inputs.version }}
+        FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        set -uo pipefail
+        # Human-readable, for the job log. Never fails here; the gate is below.
+        npx -y "the-tests-are-lying@$VERSION" --range "$RANGE" --fail-on never
+        npx -y "the-tests-are-lying@$VERSION" --range "$RANGE" --json > "$RUNNER_TEMP/tal.json"
+
+        if [ ! -s "$RUNNER_TEMP/tal.json" ]; then
+          echo "::error::the-tests-are-lying produced no output" >&2
+          exit 1
+        fi
+        node "$GITHUB_ACTION_PATH/.github/action/summarize.js" "$RUNNER_TEMP/tal.json"
+
+    - name: Say so on the pull request
+      if: >-
+        inputs.comment == 'true' &&
+        steps.scan.outputs.findings != '0' &&
+        github.event.pull_request.number
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPLY: ${{ steps.scan.outputs.reply }}
+        API: ${{ github.api_url }}/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments
+      run: |
+        set -euo pipefail
+        node "$GITHUB_ACTION_PATH/.github/action/comment.js" > "$RUNNER_TEMP/tal-comment.json"
+        curl -sS -X POST \
+          -H "Authorization: Bearer $GH_TOKEN" \
+          -H "Accept: application/vnd.github+json" \
+          --data @"$RUNNER_TEMP/tal-comment.json" \
+          "$API" -o /dev/null -w 'comment posted: %{http_code}\n'
+
+    - name: Decide the build
+      shell: bash
+      env:
+        FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        set -euo pipefail
+        node "$GITHUB_ACTION_PATH/.github/action/gate.js" "$RUNNER_TEMP/tal.json" "$FAIL_ON"

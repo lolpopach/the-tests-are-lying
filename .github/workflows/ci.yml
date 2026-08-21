@@ -19,15 +19,14 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: node --test
 
-  dogfood:
+  weakened-checks:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: this PR does not weaken its own checks
-        run: node bin/tests-are-lying.js --range origin/main...HEAD
-        if: github.event_name == 'pull_request'
+      - uses: ./

@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -205,5 +205,105 @@ describe('documentation stays true', () => {
         assert.equal(name, pkg.name, `${doc} invokes ${name}, published name is ${pkg.name}`);
       }
     }
+  });
+});
+
+describe('github action', () => {
+  const actionDir = fileURLToPath(new URL('../.github/action/', import.meta.url));
+  const reportPath = fileURLToPath(new URL('../.github/action/fixture.tmp.json', import.meta.url));
+
+  const REPORT = {
+    version: 1,
+    summary: { lying: 1, muted: 1, looser: 0 },
+    stats: {},
+    findings: [
+      { ruleId: 'test-skipped', level: 'muted', file: 'test/a.test.js', line: 4, message: 'This test is skipped (it.skip)' },
+      { ruleId: 'ci-always-passes', level: 'lying', file: '.github/workflows/ci.yml', line: 9, message: 'CI cannot fail on this step any more' },
+    ],
+    errors: [],
+    reply: 'You made the checks easier to pass instead of making the code correct.',
+  };
+
+  const CLEAN = { version: 1, summary: { lying: 0, muted: 0, looser: 0 }, stats: {}, findings: [], errors: [], reply: 'No checks were weakened in this diff.' };
+
+  function runScript(name, args = [], env = {}) {
+    try {
+      return {
+        code: 0,
+        stdout: execFileSync(process.execPath, [actionDir + name, ...args], {
+          encoding: 'utf8', env: { ...process.env, GITHUB_OUTPUT: '', ...env },
+        }),
+      };
+    } catch (err) {
+      return { code: err.status, stdout: err.stdout || '' };
+    }
+  }
+
+  function withReport(report, fn) {
+    writeFileSync(reportPath, JSON.stringify(report));
+    try { return fn(reportPath); } finally { rmSync(reportPath, { force: true }); }
+  }
+
+  test('action.yml parses and points at the published package', () => {
+    const yml = read('../action.yml');
+    assert.match(yml, /using: composite/);
+    assert.match(yml, /the-tests-are-lying@\$VERSION/);
+    for (const script of ['summarize.js', 'comment.js', 'gate.js']) {
+      assert.ok(yml.includes(script), `action.yml should call ${script}`);
+      assert.ok(existsSync(actionDir + script), `${script} is missing`);
+    }
+  });
+
+  test('summarize emits one output per level plus a delimited reply', () => {
+    withReport(REPORT, (p) => {
+      const { stdout } = runScript('summarize.js', [p]);
+
+      assert.match(stdout, /^findings=2$/m);
+      assert.match(stdout, /^lying=1$/m);
+      assert.match(stdout, /^muted=1$/m);
+
+      // A fixed delimiter would let a crafted finding forge extra outputs.
+      const delimiter = stdout.match(/^reply<<(\S+)$/m);
+      assert.ok(delimiter, 'reply must use a heredoc');
+      assert.ok(!REPORT.reply.includes(delimiter[1]), 'delimiter must not appear in the body');
+    });
+  });
+
+  test('the comment body is JSON the API will accept', () => {
+    const { stdout } = runScript('comment.js', [], { REPLY: 'line one\n"quoted"\nline three' });
+    const parsed = JSON.parse(stdout);
+
+    assert.ok(parsed.body.includes('the-tests-are-lying'));
+    assert.ok(parsed.body.includes('"quoted"'), 'quotes must survive, not break the payload');
+  });
+
+  test('the gate fails at or above the threshold and passes below it', () => {
+    withReport(REPORT, (p) => {
+      assert.equal(runScript('gate.js', [p, 'lying']).code, 1);
+      assert.equal(runScript('gate.js', [p, 'muted']).code, 1);
+      assert.equal(runScript('gate.js', [p, 'never']).code, 0);
+      assert.equal(runScript('gate.js', [p, 'nonsense']).code, 2);
+    });
+  });
+
+  test('a report with only a looser finding does not fail the default gate', () => {
+    const looser = { ...CLEAN, summary: { lying: 0, muted: 0, looser: 1 },
+      findings: [{ ruleId: 'threshold-loosened', level: 'looser', file: 'jest.config.js', line: 3, message: 'coverage threshold changed from 80 to 40' }] };
+
+    withReport(looser, (p) => {
+      assert.equal(runScript('gate.js', [p, 'muted']).code, 0);
+      assert.equal(runScript('gate.js', [p, 'looser']).code, 1);
+    });
+  });
+
+  test('a clean report passes', () => {
+    withReport(CLEAN, (p) => assert.equal(runScript('gate.js', [p, 'lying']).code, 0));
+  });
+
+  test('the gate annotates each finding where GitHub can render it', () => {
+    withReport(REPORT, (p) => {
+      const { stdout } = runScript('gate.js', [p, 'muted']);
+      assert.match(stdout, /::error file=test\/a\.test\.js,line=4::/);
+    });
   });
 });
