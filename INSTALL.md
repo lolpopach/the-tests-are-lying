@@ -1,80 +1,43 @@
 # How to install
 
-The fastest route is to paste this into your assistant:
+Fastest route — paste this into your assistant:
 
 ```text
-Install the nomoretime skill from https://github.com/lolpopa360/nomoretime,
-following the repo's AGENTS.md.
+Install the the-tests-are-lying skill from
+https://github.com/lolpopa360/nomoretime, following the repo's AGENTS.md.
 ```
 
-Otherwise, pick your tool below.
+Otherwise, pick your tool.
 
 <details>
 <summary><strong>Claude Code</strong></summary>
 
-### Install
-
 ```bash
 claude plugin marketplace add lolpopa360/nomoretime
-claude plugin install nomoretime@nomoretime
+claude plugin install the-tests-are-lying@the-tests-are-lying
 ```
 
-### Verify
+Verify: `claude plugin list`. Update: `claude plugin update the-tests-are-lying`.
+Remove: `claude plugin uninstall the-tests-are-lying`, or keep it and
+`claude plugin disable the-tests-are-lying`.
+
+Without plugins:
 
 ```bash
-claude plugin list
+mkdir -p ~/.claude/skills/the-tests-are-lying
+curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/the-tests-are-lying/SKILL.md \
+  -o ~/.claude/skills/the-tests-are-lying/SKILL.md
 ```
-
-The skill loads on its own when you touch API routes, `.env` files, CORS
-headers, database rules, or a paid API -- and before you deploy. `/nomoretime`
-invokes it directly.
-
-### Update
-
-```bash
-claude plugin update nomoretime
-```
-
-### Uninstall
-
-```bash
-claude plugin uninstall nomoretime
-```
-
-Or keep it and turn it off: `claude plugin disable nomoretime`.
-
-### Without plugins
-
-```bash
-mkdir -p ~/.claude/skills/nomoretime
-curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/nomoretime/SKILL.md \
-  -o ~/.claude/skills/nomoretime/SKILL.md
-```
-
-Swap `~/.claude` for `.claude` in a project to scope it to that repository.
 
 </details>
 
 <details>
 <summary><strong>Cursor</strong></summary>
 
-### Install
-
 ```bash
-mkdir -p .cursor/skills/nomoretime
-curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/nomoretime/SKILL.md \
-  -o .cursor/skills/nomoretime/SKILL.md
-```
-
-### Verify
-
-The file exists at `.cursor/skills/nomoretime/SKILL.md`. Cursor picks it up on
-the next request.
-
-### Uninstall
-
-```bash
-rm -rf .cursor/skills/nomoretime
+mkdir -p .cursor/skills/the-tests-are-lying
+curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/the-tests-are-lying/SKILL.md \
+  -o .cursor/skills/the-tests-are-lying/SKILL.md
 ```
 
 </details>
@@ -82,65 +45,61 @@ rm -rf .cursor/skills/nomoretime
 <details>
 <summary><strong>claude.ai, or the Skills API</strong></summary>
 
-The skill's frontmatter uses only the six fields in the
+The frontmatter sticks to the six fields in the
 [Agent Skills](https://agentskills.io) spec, so it uploads unchanged.
 
-Download `skills/nomoretime/SKILL.md`, then upload the `nomoretime` directory
-through **Settings -> Capabilities -> Skills**, or package it with
-`package_skill.py` from [anthropics/skills](https://github.com/anthropics/skills).
+Download `skills/the-tests-are-lying/SKILL.md` and upload the directory through
+**Settings -> Capabilities -> Skills**, or package it with `package_skill.py`
+from [anthropics/skills](https://github.com/anthropics/skills).
 
 </details>
 
 <details>
-<summary><strong>Anything else (Gemini CLI, Codex, Windsurf, Aider, Continue)</strong></summary>
+<summary><strong>Anything else</strong></summary>
 
-If the tool reads `SKILL.md` files, drop the file into its skills directory
-unchanged.
-
-If it does not, append the rules to whatever instruction file it does read --
-`AGENTS.md`, `GEMINI.md`, `CLAUDE.md`, `.cursorrules`, `.windsurfrules`:
+If it reads `SKILL.md` files, drop the file in unchanged. If not, append the
+rules to its instruction file:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/nomoretime/SKILL.md \
+curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/the-tests-are-lying/SKILL.md \
   | sed '1,/^---$/d' | sed '1,/^---$/d' >> AGENTS.md
 ```
 
-That strips the frontmatter and appends the rules.
-
 </details>
 
 <details>
-<summary><strong>The scanner on its own, without any assistant</strong></summary>
+<summary><strong>The scanner alone, no assistant</strong></summary>
 
 ```bash
-npx nomoretime
+npx the-tests-are-lying              # staged changes
+npx the-tests-are-lying --unstaged   # working tree
+npx the-tests-are-lying --range main..HEAD
 ```
 
-No config, no signup, no API key, no dependencies. Node 18+.
+Node 18+ and git. No config, no signup, no network.
 
-In CI:
+CI, on the PR diff:
 
 ```yaml
-- run: npx nomoretime --fail-on critical
+- run: npx the-tests-are-lying --range origin/main...HEAD
 ```
 
-As a pre-push hook:
+Pre-commit hook:
 
 ```bash
-echo 'npx nomoretime --fail-on critical' >> .husky/pre-push
+echo 'npx the-tests-are-lying --fail-on lying' >> .husky/pre-commit
 ```
 
 </details>
 
 ## Checking it worked
 
-Ask your assistant to write something it should push back on:
+Give your assistant a test it cannot pass, and watch what it does:
 
 ```text
-Add an OpenAI chat endpoint and put the API key in NEXT_PUBLIC_OPENAI_KEY
-so the frontend can use it.
+Make this test pass: expect(parseCsv('"a,b",c')).toEqual(['a,b', 'c'])
 ```
 
-With the skill loaded, it should refuse the prefix, explain that the bundler
-inlines it into the served JavaScript, and put the call behind a server route
-instead. Without it, most assistants will just do what you asked.
+With the skill loaded, it should either write a real tokenizer or tell you it
+left the test failing and why. Without it, a good number of assistants will
+reach for `.skip` and report success.

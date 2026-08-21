@@ -1,39 +1,23 @@
-import { execFileSync } from 'node:child_process';
-import { scanFiles, readGitignore } from './scan.js';
+import { readDiff, parseDiff, addedLines, removedLines, isAcknowledged } from './diff.js';
 import { RULES } from './rules/index.js';
-import { SEVERITY_ORDER } from './rules/helpers.js';
-
-/** Files git knows about, or null when this is not a git repo. */
-function readTrackedFiles(root) {
-  try {
-    const out = execFileSync('git', ['ls-files', '-z'], {
-      cwd: root,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-      maxBuffer: 32 * 1024 * 1024,
-    });
-    return new Set(out.split('\0').filter(Boolean));
-  } catch {
-    return null;
-  }
-}
+import { LEVEL_ORDER } from './rules/helpers.js';
 
 /**
- * Check a project and return everything worth telling the user about.
+ * Inspect a diff for changes that make the checks easier to pass.
  *
- * A rule that throws is reported as a rule failure rather than taking the run
- * down: a crash on one odd file should not cost you the other ten checks.
+ * The question is never "did the tests change" -- tests change constantly.
+ * It is "did this change make a failing thing pass without the code being any
+ * different", which is a much narrower and much more answerable question.
  */
-export function check(root = process.cwd(), { only = null, skip = [] } = {}) {
+export function inspect(cwd = process.cwd(), { source = 'staged', range = null, only = null, skip = [], diffText = null } = {}) {
   const started = Date.now();
 
-  const files = scanFiles(root);
+  const text = diffText !== null ? diffText : readDiff(cwd, { source, range });
+  const diff = parseDiff(text);
   const context = {
-    root,
-    files,
-    filesByPath: new Map(files.map((f) => [f.relPath, f])),
-    gitignore: readGitignore(root),
-    trackedFiles: readTrackedFiles(root),
+    diff,
+    added: addedLines(diff).filter((l) => !isAcknowledged(l.text)),
+    removed: removedLines(diff),
   };
 
   const findings = [];
@@ -44,8 +28,8 @@ export function check(root = process.cwd(), { only = null, skip = [] } = {}) {
 
   for (const rule of active) {
     try {
-      for (const finding of rule.check(context)) {
-        findings.push({ ruleId: rule.id, ruleTitle: rule.title, ...finding });
+      for (const f of rule.check(context)) {
+        findings.push({ ruleId: rule.id, ruleTitle: rule.title, ...f });
       }
     } catch (err) {
       errors.push({ ruleId: rule.id, message: err && err.message ? err.message : String(err) });
@@ -53,21 +37,23 @@ export function check(root = process.cwd(), { only = null, skip = [] } = {}) {
   }
 
   findings.sort((a, b) => {
-    const bySeverity = SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity);
-    if (bySeverity !== 0) return bySeverity;
+    const byLevel = LEVEL_ORDER.indexOf(a.level) - LEVEL_ORDER.indexOf(b.level);
+    if (byLevel !== 0) return byLevel;
     if (a.file !== b.file) return a.file < b.file ? -1 : 1;
     return a.line - b.line;
   });
 
-  const counts = Object.fromEntries(SEVERITY_ORDER.map((s) => [s, 0]));
-  for (const f of findings) counts[f.severity]++;
+  const counts = Object.fromEntries(LEVEL_ORDER.map((l) => [l, 0]));
+  for (const f of findings) counts[f.level]++;
 
   return {
     findings,
     errors,
     counts,
     stats: {
-      filesScanned: files.length,
+      filesChanged: diff.files.length,
+      linesAdded: context.added.length,
+      linesRemoved: context.removed.length,
       rulesRun: active.length,
       durationMs: Date.now() - started,
     },
@@ -75,4 +61,4 @@ export function check(root = process.cwd(), { only = null, skip = [] } = {}) {
 }
 
 export { RULES } from './rules/index.js';
-export { SEVERITY } from './rules/helpers.js';
+export { LEVEL } from './rules/helpers.js';

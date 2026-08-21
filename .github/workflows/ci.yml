@@ -23,8 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: nomoretime checks itself
-        run: node bin/nomoretime.js .
+      - name: this PR does not weaken its own checks
+        run: node bin/tests-are-lying.js --range origin/main...HEAD
+        if: github.event_name == 'pull_request'

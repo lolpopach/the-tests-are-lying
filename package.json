@@ -1,51 +1,22 @@
 {
-  "name": "nomoretime",
-  "version": "0.2.0",
-  "description": "Stop your coding agent from shipping leaked keys, open endpoints, and runaway API bills. A skill for AI assistants, backed by a zero-dependency scanner.",
+  "name": "the-tests-are-lying",
+  "version": "0.1.0",
+  "description": "Your agent didn't fix the code, it fixed the check. Finds deleted assertions, skipped tests, swallowed errors and toothless CI in a diff.",
   "keywords": [
-    "claude-code",
-    "claude-skill",
-    "agent-skills",
-    "cursor",
-    "ai-coding-agent",
-    "vibe-coding",
-    "ai-generated-code",
-    "security",
-    "secrets",
-    "pre-deploy",
-    "cli"
+    "claude-code", "claude-skill", "agent-skills", "cursor", "ai-coding-agent",
+    "reward-hacking", "test-integrity", "vibe-coding", "code-review", "cli"
   ],
   "license": "MIT",
   "type": "module",
   "bin": {
-    "nomoretime": "bin/nomoretime.js"
+    "the-tests-are-lying": "bin/tests-are-lying.js",
+    "tests-are-lying": "bin/tests-are-lying.js"
   },
-  "files": [
-    "bin",
-    "src",
-    "skills",
-    ".claude-plugin",
-    "AGENTS.md",
-    "INSTALL.md",
-    "README.md",
-    "LICENSE"
-  ],
-  "exports": {
-    ".": "./src/index.js"
-  },
-  "scripts": {
-    "test": "node --test",
-    "start": "node bin/nomoretime.js"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lolpopa360/nomoretime.git"
-  },
-  "bugs": {
-    "url": "https://github.com/lolpopa360/nomoretime/issues"
-  },
+  "files": ["bin", "src", "skills", ".claude-plugin", "AGENTS.md", "INSTALL.md", "README.md", "LICENSE"],
+  "exports": { ".": "./src/index.js" },
+  "scripts": { "test": "node --test", "start": "node bin/tests-are-lying.js" },
+  "engines": { "node": ">=18" },
+  "repository": { "type": "git", "url": "git+https://github.com/lolpopa360/nomoretime.git" },
+  "bugs": { "url": "https://github.com/lolpopa360/nomoretime/issues" },
   "homepage": "https://github.com/lolpopa360/nomoretime#readme"
 }

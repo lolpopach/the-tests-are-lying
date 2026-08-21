@@ -1,25 +1,22 @@
-import { hardcodedCredential, publicEnvSecret } from './secrets.js';
-import { envCommitted, gitignoreMissingEnv } from './git-hygiene.js';
-import { unauthenticatedWrite, openCors, firebaseOpenRules } from './open-backend.js';
-import { meteredEndpointUnprotected } from './cost.js';
-import { debugEndpointShipped, sqlStringBuilding, secretLogged } from './leftovers.js';
+import { assertionDeleted, tautologicalAssertion, testDeleted, thresholdLoosened } from './gutted.js';
+import {
+  testSkipped, errorSuppressed, errorSwallowed, subjectMocked, ciAlwaysPasses,
+} from './silenced.js';
 
 /**
- * Every check nomoretime knows about, in the order a person would want to
- * hear them: what is already public, then what is open, then what is left over.
+ * Every way a diff can make the checks easier instead of making the code
+ * right, ordered by how completely the green light stops meaning anything.
  */
 export const RULES = [
-  hardcodedCredential,
-  publicEnvSecret,
-  envCommitted,
-  firebaseOpenRules,
-  meteredEndpointUnprotected,
-  unauthenticatedWrite,
-  sqlStringBuilding,
-  openCors,
-  secretLogged,
-  debugEndpointShipped,
-  gitignoreMissingEnv,
+  testDeleted,
+  assertionDeleted,
+  tautologicalAssertion,
+  subjectMocked,
+  ciAlwaysPasses,
+  testSkipped,
+  errorSwallowed,
+  errorSuppressed,
+  thresholdLoosened,
 ];
 
 export const RULE_IDS = RULES.map((r) => r.id);

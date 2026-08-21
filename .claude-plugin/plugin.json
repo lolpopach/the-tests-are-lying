@@ -1,22 +1,11 @@
 {
-  "name": "nomoretime",
-  "displayName": "nomoretime",
-  "version": "0.2.0",
-  "description": "Stop your coding agent from shipping leaked keys, open endpoints, and runaway API bills. Prevention rules plus a scanner that verifies instead of guessing.",
-  "author": {
-    "name": "lolpopa360",
-    "url": "https://github.com/lolpopa360"
-  },
+  "name": "the-tests-are-lying",
+  "displayName": "the-tests-are-lying",
+  "version": "0.1.0",
+  "description": "Never let your agent make a failing check pass by changing the check. Prevention rules plus a scanner that reads the diff and refuses the green.",
+  "author": { "name": "lolpopa360", "url": "https://github.com/lolpopa360" },
   "homepage": "https://github.com/lolpopa360/nomoretime#readme",
   "repository": "https://github.com/lolpopa360/nomoretime",
   "license": "MIT",
-  "keywords": [
-    "security",
-    "vibe-coding",
-    "secrets",
-    "api-keys",
-    "pre-deploy",
-    "cors",
-    "auth"
-  ]
+  "keywords": ["testing", "reward-hacking", "verification", "code-review", "ci"]
 }

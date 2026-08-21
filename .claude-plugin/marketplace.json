@@ -1,17 +1,14 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
-  "name": "nomoretime",
-  "description": "Catch the mistakes vibe-coded apps ship with: keys in the browser bundle, write endpoints with no auth, AI proxies with no rate limit.",
-  "owner": {
-    "name": "lolpopa360",
-    "url": "https://github.com/lolpopa360"
-  },
+  "name": "the-tests-are-lying",
+  "description": "Catches the moment your agent stops fixing the code and starts fixing the check.",
+  "owner": { "name": "lolpopa360", "url": "https://github.com/lolpopa360" },
   "plugins": [
     {
-      "name": "nomoretime",
-      "description": "Security rules for AI-assisted code, verified by a zero-dependency scanner.",
+      "name": "the-tests-are-lying",
+      "description": "Test-integrity rules for AI coding agents, verified by a zero-dependency diff scanner.",
       "source": "./",
-      "category": "security"
+      "category": "engineering"
     }
   ]
 }

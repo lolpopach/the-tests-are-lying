@@ -1,17 +1,18 @@
-import { SEVERITY_ORDER } from './rules/helpers.js';
+import { LEVEL_ORDER } from './rules/helpers.js';
+
+const ESC = String.fromCharCode(27);
 
 const ANSI = {
-  reset: '\u001b[0m',
-  bold: '\u001b[1m',
-  dim: '\u001b[2m',
-  red: '\u001b[31m',
-  yellow: '\u001b[33m',
-  blue: '\u001b[34m',
-  green: '\u001b[32m',
-  grey: '\u001b[90m',
+  reset: `${ESC}[0m`,
+  bold: `${ESC}[1m`,
+  dim: `${ESC}[2m`,
+  red: `${ESC}[31m`,
+  yellow: `${ESC}[33m`,
+  blue: `${ESC}[34m`,
+  green: `${ESC}[32m`,
+  grey: `${ESC}[90m`,
 };
 
-/** Honour NO_COLOR and pipes; a report piped into a file should stay readable. */
 export function makePainter(enabled) {
   if (!enabled) {
     const identity = (s) => s;
@@ -28,18 +29,16 @@ export function colorEnabled(stream = process.stdout) {
   return Boolean(stream.isTTY);
 }
 
-const SEVERITY_STYLE = {
-  critical: { label: 'CRITICAL', color: 'red', mark: '!' },
-  high: { label: 'HIGH', color: 'yellow', mark: '*' },
-  medium: { label: 'MEDIUM', color: 'blue', mark: '-' },
+const LEVEL_STYLE = {
+  lying: { label: 'LYING', color: 'red', mark: '!', gloss: 'the check passes without testing anything' },
+  muted: { label: 'MUTED', color: 'yellow', mark: '*', gloss: 'a real failure is being hidden' },
+  looser: { label: 'LOOSER', color: 'blue', mark: '-', gloss: 'the check still runs, it is just easier to pass' },
 };
 
-/** Wrap text to a column, prefixing every line with the same indent. */
 function wrap(text, width, indent) {
   const limit = Math.max(24, width - indent.length);
   const lines = [];
   let current = '';
-
   for (const word of String(text).split(/\s+/).filter(Boolean)) {
     if (current && current.length + 1 + word.length > limit) {
       lines.push(indent + current);
@@ -57,7 +56,6 @@ function truncate(text, max) {
   return s.length > max ? s.slice(0, max - 1) + '...' : s;
 }
 
-/** Render the full human-readable report as a string. */
 export function formatReport(result, { color = true, width = 80 } = {}) {
   const c = makePainter(color);
   const { findings, counts, stats, errors } = result;
@@ -66,43 +64,51 @@ export function formatReport(result, { color = true, width = 80 } = {}) {
 
   out.push('');
   out.push(
-    '  ' + c.bold('nomoretime') + '  ' +
-    c.grey(`${stats.filesScanned} files checked in ${(stats.durationMs / 1000).toFixed(1)}s`)
+    '  ' + c.bold('the-tests-are-lying') + '  ' +
+    c.grey(`${stats.filesChanged} changed file${stats.filesChanged === 1 ? '' : 's'}`)
   );
   out.push('');
 
   if (findings.length === 0) {
-    out.push('  ' + c.green('Nothing to fix.') + ' ' + c.grey(`${stats.rulesRun} checks passed.`));
+    out.push('  ' + c.green('Nothing weakened.') + ' ' +
+      c.grey('The checks are as hard to pass as they were.'));
     out.push('');
     if (errors.length) out.push(...renderErrors(errors, c));
     return out.join('\n');
   }
 
-  for (const severity of SEVERITY_ORDER) {
-    const group = findings.filter((f) => f.severity === severity);
+  for (const level of LEVEL_ORDER) {
+    const group = findings.filter((f) => f.level === level);
     if (group.length === 0) continue;
 
-    const style = SEVERITY_STYLE[severity];
-    out.push('  ' + c[style.color](c.bold(style.label)) + '  ' + c.grey(String(group.length)));
+    const style = LEVEL_STYLE[level];
+    out.push(
+      '  ' + c[style.color](c.bold(style.label)) + '  ' + c.grey(String(group.length)) +
+      c.grey('   ' + style.gloss)
+    );
     out.push('  ' + c.grey('-'.repeat(w - 2)));
     out.push('');
 
     for (const f of group) {
       out.push('  ' + c[style.color](style.mark) + '  ' + c.bold(f.message));
-      out.push('     ' + c.grey(`${f.file}:${f.line}`) + c.grey('  ·  ') + c.grey(f.ruleId));
+      out.push(
+        '     ' + c.grey(`${f.file}:${f.line}`) + c.grey('  ·  ') + c.grey(f.ruleId) +
+        c.grey('  ·  ') + c.grey(f.side === 'removed' ? 'removed' : 'added')
+      );
       out.push('');
 
       if (f.snippet) {
-        out.push('     ' + c.dim(truncate(f.snippet, w - 8)));
+        const mark = f.side === 'removed' ? '- ' : '+ ';
+        out.push('     ' + c.dim(mark + truncate(f.snippet, w - 10)));
         out.push('');
       }
 
       out.push(...wrap(f.why, w, '     '));
       out.push('');
 
-      const fixLines = wrap(f.fix, w - 4, '');
-      out.push('     ' + c.green('fix') + '  ' + fixLines[0]);
-      for (const line of fixLines.slice(1)) out.push('          ' + line);
+      const askLines = wrap(f.ask, w - 4, '');
+      out.push('     ' + c.green('ask') + '  ' + askLines[0]);
+      for (const line of askLines.slice(1)) out.push('          ' + line);
       out.push('');
     }
   }
@@ -110,7 +116,7 @@ export function formatReport(result, { color = true, width = 80 } = {}) {
   out.push('  ' + c.grey('-'.repeat(w - 2)));
   out.push('  ' + summaryLine(counts, c));
   out.push('');
-  out.push('  ' + c.grey(advice(counts)));
+  out.push(...wrap(c.grey(verdict(counts)), w, '  '));
   out.push('');
 
   if (errors.length) out.push(...renderErrors(errors, c));
@@ -119,20 +125,20 @@ export function formatReport(result, { color = true, width = 80 } = {}) {
 }
 
 function summaryLine(counts, c) {
-  const parts = SEVERITY_ORDER
-    .filter((s) => counts[s] > 0)
-    .map((s) => c[SEVERITY_STYLE[s].color](`${counts[s]} ${s}`));
-  return parts.join(c.grey('  ·  '));
+  return LEVEL_ORDER
+    .filter((l) => counts[l] > 0)
+    .map((l) => c[LEVEL_STYLE[l].color](`${counts[l]} ${l}`))
+    .join(c.grey('  ·  '));
 }
 
-function advice(counts) {
-  if (counts.critical > 0) {
-    return 'Treat every critical finding as already leaked: rotate the key first, then fix the code.';
+function verdict(counts) {
+  if (counts.lying > 0) {
+    return 'A green run on this diff proves nothing. Get the checks back first, then find out what was actually failing.';
   }
-  if (counts.high > 0) {
-    return 'Nothing is public yet. Close the high findings before this gets traffic.';
+  if (counts.muted > 0) {
+    return 'Something was failing and is now out of sight. It is still failing.';
   }
-  return 'Worth a look when you get a moment. None of this is urgent.';
+  return 'Nothing is hidden. The bar just moved a little; worth knowing why.';
 }
 
 function renderErrors(errors, c) {
@@ -142,7 +148,34 @@ function renderErrors(errors, c) {
   return lines;
 }
 
-/** Machine-readable output for CI and editors. */
+/**
+ * The message to send back to whoever wrote the diff.
+ *
+ * The findings are for the human. This is for the agent, and it is the whole
+ * point of the tool: the fastest correct response to a weakened check is to
+ * hand the list back and refuse the green.
+ */
+export function formatReply(result) {
+  const { findings, counts } = result;
+  if (findings.length === 0) return 'No checks were weakened in this diff.';
+
+  const lines = [];
+  lines.push('You made the checks easier to pass instead of making the code correct. Undo these, then tell me what was actually failing:');
+  lines.push('');
+
+  for (const f of findings) {
+    lines.push(`- ${f.file}:${f.line} — ${f.message}`);
+  }
+
+  lines.push('');
+  if (counts.lying > 0) {
+    lines.push('Do not report this as passing until the removed checks are back and green on their own.');
+  } else {
+    lines.push('Restore each of these, then show me the failure output before changing anything else.');
+  }
+  return lines.join('\n');
+}
+
 export function formatJson(result) {
   return JSON.stringify({
     version: 1,
@@ -150,5 +183,6 @@ export function formatJson(result) {
     stats: result.stats,
     findings: result.findings,
     errors: result.errors,
+    reply: formatReply(result),
   }, null, 2);
 }
