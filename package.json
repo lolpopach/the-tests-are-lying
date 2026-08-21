@@ -1,0 +1,43 @@
+{
+  "name": "nomoretime",
+  "version": "0.1.0",
+  "description": "Pre-flight check for vibe-coded apps. Finds the mistakes that get you hacked or billed, before you ship.",
+  "keywords": [
+    "vibe-coding",
+    "ai-generated-code",
+    "security",
+    "secrets",
+    "pre-deploy",
+    "linter",
+    "cli"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "nomoretime": "bin/nomoretime.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "start": "node bin/nomoretime.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lolpopa360/nomoretime.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lolpopa360/nomoretime/issues"
+  },
+  "homepage": "https://github.com/lolpopa360/nomoretime#readme"
+}
