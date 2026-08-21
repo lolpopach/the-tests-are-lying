@@ -4,7 +4,7 @@ Fastest route — paste this into your assistant:
 
 ```text
 Install the the-tests-are-lying skill from
-https://github.com/lolpopa360/nomoretime, following the repo's AGENTS.md.
+https://github.com/lolpopach/the-tests-are-lying, following the repo's AGENTS.md.
 ```
 
 Otherwise, pick your tool.
@@ -13,7 +13,7 @@ Otherwise, pick your tool.
 <summary><strong>Claude Code</strong></summary>
 
 ```bash
-claude plugin marketplace add lolpopa360/nomoretime
+claude plugin marketplace add lolpopach/the-tests-are-lying
 claude plugin install the-tests-are-lying@the-tests-are-lying
 ```
 
@@ -25,7 +25,7 @@ Without plugins:
 
 ```bash
 mkdir -p ~/.claude/skills/the-tests-are-lying
-curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/the-tests-are-lying/SKILL.md \
+curl -fsSL https://raw.githubusercontent.com/lolpopach/the-tests-are-lying/main/skills/the-tests-are-lying/SKILL.md \
   -o ~/.claude/skills/the-tests-are-lying/SKILL.md
 ```
 
@@ -36,7 +36,7 @@ curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/t
 
 ```bash
 mkdir -p .cursor/skills/the-tests-are-lying
-curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/the-tests-are-lying/SKILL.md \
+curl -fsSL https://raw.githubusercontent.com/lolpopach/the-tests-are-lying/main/skills/the-tests-are-lying/SKILL.md \
   -o .cursor/skills/the-tests-are-lying/SKILL.md
 ```
 
@@ -61,7 +61,7 @@ If it reads `SKILL.md` files, drop the file in unchanged. If not, append the
 rules to its instruction file:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/the-tests-are-lying/SKILL.md \
+curl -fsSL https://raw.githubusercontent.com/lolpopach/the-tests-are-lying/main/skills/the-tests-are-lying/SKILL.md \
   | sed '1,/^---$/d' | sed '1,/^---$/d' >> AGENTS.md
 ```
 

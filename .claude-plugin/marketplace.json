@@ -2,7 +2,7 @@
   "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
   "name": "the-tests-are-lying",
   "description": "Catches the moment your agent stops fixing the code and starts fixing the check.",
-  "owner": { "name": "lolpopa360", "url": "https://github.com/lolpopa360" },
+  "owner": { "name": "lolpopach", "url": "https://github.com/lolpopach" },
   "plugins": [
     {
       "name": "the-tests-are-lying",

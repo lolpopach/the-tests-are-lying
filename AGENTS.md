@@ -11,7 +11,7 @@ The file to install is `skills/the-tests-are-lying/SKILL.md` in this repository.
 Preferred, because updates come with it:
 
 ```bash
-claude plugin marketplace add lolpopa360/nomoretime
+claude plugin marketplace add lolpopach/the-tests-are-lying
 claude plugin install the-tests-are-lying@the-tests-are-lying
 ```
 
@@ -22,7 +22,7 @@ If plugins are unavailable, copy the skill instead:
 
 ```bash
 mkdir -p ~/.claude/skills/the-tests-are-lying
-curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/the-tests-are-lying/SKILL.md \
+curl -fsSL https://raw.githubusercontent.com/lolpopach/the-tests-are-lying/main/skills/the-tests-are-lying/SKILL.md \
   -o ~/.claude/skills/the-tests-are-lying/SKILL.md
 ```
 
@@ -32,7 +32,7 @@ Use `.claude/skills/` inside the project instead of `~` to scope it to one repo.
 
 ```bash
 mkdir -p .cursor/skills/the-tests-are-lying
-curl -fsSL https://raw.githubusercontent.com/lolpopa360/nomoretime/main/skills/the-tests-are-lying/SKILL.md \
+curl -fsSL https://raw.githubusercontent.com/lolpopach/the-tests-are-lying/main/skills/the-tests-are-lying/SKILL.md \
   -o .cursor/skills/the-tests-are-lying/SKILL.md
 ```
 
