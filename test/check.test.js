@@ -380,6 +380,25 @@ describe('leftovers', () => {
     assert.equal(finding.severity, 'high');
   });
 
+  test('an UPDATE with an interpolated value is reported', () => {
+    const root = scratch({
+      'functions/api/q.js': 'await db.run(`UPDATE posts SET title = ${title}`);',
+    });
+    assert.ok(findingIds(check(root)).includes('sql-string-building'));
+  });
+
+  test('an HTML select tag is not a SQL query', () => {
+    // Regression: matching a bare SELECT turns every '<select ...>' + built by
+    // string concatenation into an injection report.
+    const root = scratch({
+      'functions/api/render.js': [
+        "const html = '<select class=\"menu\">' + options + '</select>';",
+        "const other = '<select name=\"from\">' + options + '</select>';",
+      ].join('\n'),
+    });
+    assert.ok(!findingIds(check(root)).includes('sql-string-building'));
+  });
+
   test('bound parameters are fine', () => {
     const root = scratch({
       'functions/api/q.js': "const r = await db.prepare('SELECT * FROM users WHERE id = ?').bind(id).all();",

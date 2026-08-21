@@ -31,9 +31,17 @@ export const debugEndpointShipped = {
   },
 };
 
-/** SQL built by pasting a value straight into the query text. */
-const SQL_TEMPLATE = /`[^`]*\b(?:SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM)\b[^`]*\$\{[^`]*`/is;
-const SQL_CONCAT = /['"][^'"\n]*\b(?:SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM)\b[^'"\n]*['"]\s*\+/i;
+/**
+ * SQL built by pasting a value straight into the query text.
+ *
+ * Each verb has to be followed by the clause that makes it SQL -- SELECT by
+ * FROM, UPDATE by SET. Matching the bare verb turns every `'<select ...>' +`
+ * in a template string into a SQL injection report, and a web app is full of
+ * those. The lookbehind drops the HTML tags that survive even that.
+ */
+const SQL_VERB = String.raw`(?<!<)\b(?:SELECT\b[\s\S]*?\bFROM|INSERT\s+INTO|UPDATE\b[\s\S]*?\bSET|DELETE\s+FROM)\b`;
+const SQL_TEMPLATE = new RegExp('`[^`]*' + SQL_VERB + '[^`]*\\$\\{[^`]*`', 'is');
+const SQL_CONCAT = new RegExp(`['"][^'"\n]*` + SQL_VERB + `[^'"\n]*['"]\\s*\\+`, 'i');
 
 export const sqlStringBuilding = {
   id: 'sql-string-building',
