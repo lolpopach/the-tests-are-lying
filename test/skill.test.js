@@ -155,3 +155,55 @@ describe('documented CLI surface', () => {
     }
   });
 });
+
+describe('documentation stays true', () => {
+  // Both bug classes below shipped. Neither showed up in any test, because
+  // tests covered the code and nothing covered the instructions -- which are
+  // the part a new user runs first.
+  const DOCS = ['../README.md', '../INSTALL.md', '../AGENTS.md'];
+  const pkg = JSON.parse(read('../package.json'));
+  const slug = pkg.repository.url.replace(/^git\+https:\/\/github\.com\//, '').replace(/\.git$/, '');
+
+  test('every GitHub link points at the current owner and repository', () => {
+    // A rename redirects git but not raw.githubusercontent.com, so a stale
+    // slug leaves the curl install commands returning 404 and nothing else
+    // looking wrong.
+    for (const doc of DOCS) {
+      const found = read(doc).match(/github(?:usercontent)?\.com\/([\w.-]+\/[\w.-]+)/g) || [];
+      for (const url of found) {
+        const owner = url.replace(/^github(?:usercontent)?\.com\//, '');
+        if (owner.startsWith('anthropics/') || owner.startsWith('agentskills')) continue;
+        assert.ok(
+          owner.startsWith(slug),
+          `${doc} points at ${owner}, but the repository is ${slug}`
+        );
+      }
+    }
+  });
+
+  test('the frontmatter-stripping command leaves the rules behind', () => {
+    // Documented as two `sed` passes. The first already removes the whole
+    // block, so the second deleted through to end of file and the command
+    // produced nothing at all.
+    const skill = read(SKILL_PATH);
+    const lines = skill.split('\n');
+    const close = lines.indexOf('---', 1);
+    const body = lines.slice(close + 1).join('\n');
+
+    assert.ok(body.trim().length > 500, 'stripping the frontmatter should leave the rules');
+    assert.ok(body.includes('## Never'), 'the rules must survive the strip');
+
+    const command = read('../INSTALL.md').match(/sed '1,\/\^---\$\/d'/g) || [];
+    assert.equal(command.length, 1, 'one sed pass, not two -- two empties the file');
+  });
+
+  test('the install commands name a package that is actually published', () => {
+    for (const doc of DOCS) {
+      const text = read(doc);
+      for (const m of text.match(/npx (?:-y )?([\w@/.-]+)/g) || []) {
+        const name = m.replace(/npx (?:-y )?/, '').replace(/@latest$/, '');
+        assert.equal(name, pkg.name, `${doc} invokes ${name}, published name is ${pkg.name}`);
+      }
+    }
+  });
+});

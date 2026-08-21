@@ -62,7 +62,7 @@ rules to its instruction file:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/lolpopach/the-tests-are-lying/main/skills/the-tests-are-lying/SKILL.md \
-  | sed '1,/^---$/d' | sed '1,/^---$/d' >> AGENTS.md
+  | sed '1,/^---$/d' >> AGENTS.md
 ```
 
 </details>
