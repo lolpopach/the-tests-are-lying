@@ -478,3 +478,74 @@ describe('false positives found by attacking it', () => {
     assert.ok(ids(result).includes('assertion-deleted'), 'src/test_*.py should count as a test file');
   });
 });
+
+describe('language coverage', () => {
+  // One row per language per category. A pattern that only understands
+  // JavaScript is a tool most repositories cannot install.
+  const CAUGHT = [
+    // switched-off tests
+    ['ruby',    'test/a_spec.rb',   'skip "broken since the upgrade"',          'test-skipped'],
+    ['csharp',  'tests/AT.cs',      '[Fact(Skip = "flaky")]',                   'test-skipped'],
+    ['php',     'tests/ATest.php',  '$this->markTestSkipped("todo");',          'test-skipped'],
+    ['swift',   'Tests/ATests.swift', 'throw XCTSkip("not ready")',             'test-skipped'],
+    ['java',    'src/test/A.java',  'assumeTrue(false);',                       'test-skipped'],
+    ['go',      'a_test.go',        't.Skipf("no fixture")',                    'test-skipped'],
+    ['rust',    'tests/a.rs',       '#[ignore]',                                'test-skipped'],
+
+    // silenced tools
+    ['python',  'src/a.py',         '# mypy: ignore-errors',                    'error-suppressed'],
+    ['php',     'src/A.php',        '/** @phpstan-ignore-next-line */',         'error-suppressed'],
+    ['swift',   'Sources/A.swift',  '// swiftlint:disable force_cast',          'error-suppressed'],
+    ['ruby',    'lib/a.rb',         '# rubocop:disable Metrics/AbcSize',        'error-suppressed'],
+    ['kotlin',  'src/A.kt',         '@Suppress("UNCHECKED_CAST")',              'error-suppressed'],
+    ['rust',    'src/a.rs',         '#[allow(dead_code)]',                      'error-suppressed'],
+    ['go',      'a.go',             '//nolint:errcheck',                        'error-suppressed'],
+
+    // tautologies
+    ['rust',    'tests/a.rs',       'assert!(true);',                           'tautological-assertion'],
+    ['rust',    'tests/a.rs',       'assert_eq!(got, got);',                    'tautological-assertion'],
+    ['ruby',    'spec/a_spec.rb',   'expect(true).to be true',                  'tautological-assertion'],
+  ];
+
+  for (const [lang, path, line, expected] of CAUGHT) {
+    test(`${lang}: ${line.trim().slice(0, 34)}`, () => {
+      const result = run(diff(path, { added: ['  ' + line] }));
+      assert.ok(ids(result).includes(expected), `${lang} missed: ${line}`);
+    });
+  }
+
+  // Swallows only count when they wrap code that was already there.
+  const SWALLOWS = [
+    ['python', 'src/a.py',        'with contextlib.suppress(ValueError):'],
+    ['swift',  'Sources/A.swift', 'let value = try? decoder.decode(T.self, from: d)'],
+    ['go',     'a.go',            'if err != nil {}'],
+  ];
+
+  for (const [lang, path, line] of SWALLOWS) {
+    test(`${lang}: ${line.trim().slice(0, 34)}`, () => {
+      const text = diff(path, { removed: ['  doTheThing()'], added: ['  ' + line] });
+      assert.ok(ids(run(text)).includes('error-swallowed'), `${lang} missed: ${line}`);
+    });
+  }
+
+  test('assertions are counted in every suite, not just jest', () => {
+    // node:assert went uncounted for a long time because the pattern wanted a
+    // paren straight after the word, which took chai and testify with it.
+    const shapes = [
+      ['test/a.test.js',  '  assert.deepEqual(parse(x), y);'],
+      ['a_test.go',       '  require.NoError(t, err)'],
+      ['tests/test_a.py', '  self.assertEqual(parse(x), y)'],
+      ['tests/ATest.php', '  $this->assertSame($y, parse($x));'],
+      ['tests/a.rs',      '  assert_eq!(parse(x), y);'],
+      ['Tests/ATests.swift', '  XCTAssertEqual(parse(x), y)'],
+    ];
+
+    for (const [path, line] of shapes) {
+      const result = run(diff(path, { removed: [line], added: ['  // gone'] }));
+      assert.ok(
+        ids(result).includes('assertion-deleted'),
+        `removing this went unnoticed: ${line.trim()}`
+      );
+    }
+  });
+});

@@ -55,6 +55,8 @@ const TAUTOLOGY = [
   /\bassert\s+(\w+)\s*==\s*\1\s*$/,                                     // assert x == x
   /\bXCTAssertTrue\s*\(\s*true\s*\)/,
   /\bt\.(?:True|Equal)\s*\(\s*t\s*,\s*true\s*(?:,\s*true\s*)?\)/,       // testify
+  /\bassert!\s*\(\s*true\s*\)|\bassert_eq!\s*\(\s*(\w+)\s*,\s*\1\s*\)/, // rust
+  /\bexpect\s*\(\s*true\s*\)\s*\.\s*to\s+be\b/,                     // rspec
 ];
 
 export const tautologicalAssertion = {

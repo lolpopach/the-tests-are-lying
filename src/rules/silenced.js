@@ -7,8 +7,13 @@ const SKIPPED = [
   ['pytest.mark.skip', /@pytest\.mark\.(?:skip|skipif|xfail)\b/],
   ['unittest.skip', /@unittest\.skip\w*\s*\(/],
   ['@Ignore', /@(?:Ignore|Disabled)\b/],
-  ['t.Skip()', /\bt\.Skip(?:Now)?\s*\(/],
+  ['t.Skip()', /\bt\.Skip(?:Now|f)?\s*\(/],
   ['#[ignore]', /#\[ignore\]/],
+  ['markTestSkipped', /\bmarkTest(?:Skipped|Incomplete)\s*\(/],
+  ['[Fact(Skip)]', /\[(?:Fact|Theory)\s*\(\s*Skip\s*=/i],
+  ['XCTSkip', /\bXCTSkip(?:If|Unless)?\b/],
+  ['assumeTrue(false)', /\bassum\w*\s*\(\s*false\s*\)/i],
+  ['rspec skip', /^\s*(?:skip|pending)\s+['"]/],
   ['.only', /\b(?:it|test|describe)\s*\.\s*only\s*\(/],
 ];
 
@@ -48,8 +53,14 @@ const SUPPRESSED = [
   ['# pylint: disable', /#\s*pylint:\s*disable\b/],
   ['@SuppressWarnings', /@SuppressWarnings\s*\(/],
   ['#pragma warning disable', /#pragma\s+warning\s+disable/],
-  ['@ts-ignore (rust)', /#\[allow\(\s*(?:dead_code|unused|warnings)/],
+  ['#[allow(...)]', /#\[allow\(\s*(?:dead_code|unused|warnings)/],
   ['nolint', /\/\/\s*nolint\b/],
+  ['# mypy: ignore-errors', /#\s*mypy:\s*ignore/],
+  ['@phpstan-ignore', /@(?:phpstan-ignore|psalm-suppress)\b/],
+  ['swiftlint:disable', /\/\/\s*swiftlint:disable\b/],
+  ['rubocop:disable', /#\s*rubocop:disable\b/],
+  ['@Suppress', /@Suppress\s*\(/],
+  ['deno-lint-ignore', /\/\/\s*deno-lint-ignore\b/],
 ];
 
 export const errorSuppressed = {
@@ -85,6 +96,9 @@ const SWALLOWED = [
   ['rescue nil', /\brescue\s*(?:=>\s*\w+\s*)?(?:nil|;\s*end)/],
   ['_ = err', /\b_\s*(?::)?=\s*(?:err|error)\b/],
   ['catch returns null', /\btry\s*\{[^}]*\}\s*catch[^{]*\{\s*return\s+(?:null|undefined|nil|None)\s*;?\s*\}/],
+  ['suppress()', /\b(?:contextlib\.)?suppress\s*\(\s*\w*(?:Error|Exception)/],
+  ['try?', /\btry\?\s+\w/],
+  ['empty err block', /\bif\s+err\s*!=\s*nil\s*\{\s*\}/],
 ];
 
 export const errorSwallowed = {

@@ -205,6 +205,11 @@ Three levels, because the difference matters: **lying** means the check passes
 without testing anything, **muted** means a real failure is being hidden,
 **looser** means the bar just moved.
 
+Patterns cover JavaScript, TypeScript, Python, Go, Rust, Java, Kotlin, Swift,
+Ruby, PHP and C# — jest, vitest, pytest, unittest, testify, JUnit, XCTest,
+RSpec, PHPUnit, xUnit, gtest, and the linters and type checkers that go with
+them.
+
 ## Not reported
 
 False positives are the whole ballgame here — one bad finding and you stop
