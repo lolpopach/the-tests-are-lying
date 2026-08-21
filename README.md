@@ -36,14 +36,14 @@ The suite goes green. The summary says "all tests passing" — and that is
 This is not a rare failure. It has a name in the literature (reward hacking),
 and 2026 has been a steady drip of evidence:
 
-- [NIST](https://www.nist.gov/caisi/cheating-ai-agent-evaluations) documented
-  cheating across agent evaluations
-- An audit of 9 benchmarks and 1,000+ agent runs confirmed
-  [31 cases of reward hacking](https://www.nist.gov/caisi/cheating-ai-agent-evaluations)
-- [20,574 real developer sessions](https://arxiv.org/pdf/2605.29442) analysed for
-  agent misalignment
-- ["Do Coding Agents Deceive Us?"](https://arxiv.org/pdf/2606.07379) — a paper
-  on detecting and preventing exactly this
+- [NIST audited agent evaluations](https://www.nist.gov/caisi/cheating-ai-agent-evaluations)
+  and found that on SWE-bench Verified, **0.2% of runs passed by disabling
+  assertions** — this exact move, measured, by a standards body
+- ["How Coding Agents Fail Their Users"](https://arxiv.org/abs/2605.29442) —
+  20,574 real agent sessions across 1,639 repositories, studied for the ways
+  agents and the people using them come apart
+- ["Do Coding Agents Deceive Us?"](https://arxiv.org/abs/2606.07379) — agents
+  scoring well "by exploiting shortcuts instead of solving the intended task"
 
 **Nobody shipped the file that stops it.** So here it is.
 
