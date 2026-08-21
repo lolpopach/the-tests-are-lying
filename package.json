@@ -1,14 +1,18 @@
 {
   "name": "nomoretime",
-  "version": "0.1.0",
-  "description": "Pre-flight check for vibe-coded apps. Finds the mistakes that get you hacked or billed, before you ship.",
+  "version": "0.2.0",
+  "description": "Stop your coding agent from shipping leaked keys, open endpoints, and runaway API bills. A skill for AI assistants, backed by a zero-dependency scanner.",
   "keywords": [
+    "claude-code",
+    "claude-skill",
+    "agent-skills",
+    "cursor",
+    "ai-coding-agent",
     "vibe-coding",
     "ai-generated-code",
     "security",
     "secrets",
     "pre-deploy",
-    "linter",
     "cli"
   ],
   "license": "MIT",
@@ -19,6 +23,10 @@
   "files": [
     "bin",
     "src",
+    "skills",
+    ".claude-plugin",
+    "AGENTS.md",
+    "INSTALL.md",
     "README.md",
     "LICENSE"
   ],
