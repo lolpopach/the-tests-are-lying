@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "description": "Never let your agent make a failing check pass by changing the check. Prevention rules plus a scanner that reads the diff and refuses the green.",
   "author": { "name": "lolpopa360", "url": "https://github.com/lolpopa360" },
-  "homepage": "https://github.com/lolpopa360/the-tests-are-lying#readme",
-  "repository": "https://github.com/lolpopa360/the-tests-are-lying",
+  "homepage": "https://github.com/lolpopa360/nomoretime#readme",
+  "repository": "https://github.com/lolpopa360/nomoretime",
   "license": "MIT",
   "keywords": ["testing", "reward-hacking", "verification", "code-review", "ci"]
 }
